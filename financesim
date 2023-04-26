@@ -1,0 +1,170 @@
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.io.*;
+import java.io.FileNotFoundException;
+
+public class Main {
+
+    public static void main(String[] args){
+        try{
+            Scanner scnr = new Scanner(System.in);
+            System.out.println("Enter the number of tables in the restaurant: ");
+            int tables = scnr.nextInt();
+            System.out.println("Enter the number of reservations: ");
+            int reservations = scnr.nextInt();
+
+            int[] reservationsArray = randomReservations(reservations, tables);
+
+            ArrayList<Boolean> childArraylist = childList(reservationsArray);
+
+            double[] discountArray = discount(reservationsArray, childArraylist);
+            ArrayList<Double> billsArrayList = calcBill(discountArray);
+            print(reservationsArray, childArraylist, discountArray, billsArrayList);
+
+            System.out.println("The table with the highest bill is: Table " + maxTable(billsArrayList));
+
+            String file = writeFile(billsArrayList);
+            ArrayList<Double> bill = readFile(file);
+            System.out.println(bill);
+        } catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static double randomNumber(){
+        double randomNum = Math.random();
+        return randomNum;
+    }
+    public static int[] randomReservations(int reservations, int tables) throws Exception{
+        if(reservations > tables || reservations < 0){
+            throw new Exception("Number of reservations will not fit in the restaurant.");
+        }
+        else{
+            int[] array = new int[reservations];
+            for(int i = 0; i<array.length; i++){
+                int n = (int)(Math.random() * (6 - 1 + 1)) + 1;
+                array[i] = n;
+            }
+            return array;
+        }
+    }
+
+    public static ArrayList<Boolean> childList(int[] reservationsArray){
+        boolean hasChild;
+        ArrayList<Boolean> list = new ArrayList<>();
+
+        for(int i = 0; i<reservationsArray.length; i++){
+            double random = randomNumber();
+            if(random < 0.5){
+                hasChild = true;
+            }
+            else{
+                hasChild = false;
+            }
+            list.add(hasChild);
+        }
+        return list;
+    }
+
+    public static double[] discount(int[] reservationsArray, ArrayList<Boolean> childList){
+        final int SIZE = reservationsArray.length;
+        double[] discountArray = new double[SIZE];
+
+        for (int i = 0; i < SIZE; i++){
+            double discount = 0;
+            if(reservationsArray[i] >= 5 && childList.get(i)){
+                discount = 0.25;
+            }
+            else if(reservationsArray[i] == 4 && childList.get(i)){
+                discount = 0.10;
+            }
+            else if(reservationsArray[i] == 3 && childList.get(i)){
+                discount = 0.05;
+            }
+            else{
+                discount = 0;
+            }
+            discountArray[i] = discount;
+        }
+        return discountArray;
+    }
+
+    public static ArrayList<Double> calcBill(double[] discounts){
+        ArrayList<Double> bills = new ArrayList<>();
+        for (int i = 0; i < discounts.length; i++){
+            double subTotal = Math.random() * (100-30+1) + 30;
+            double total = subTotal - (subTotal*discounts[i]);
+            bills.add(total);
+        }
+        return bills;
+    }
+
+    public static String writeFile(ArrayList<Double> bills){
+        PrintWriter out = null;
+        String fileName = "pizzaTime.txt";
+
+        try{
+            out = new PrintWriter(fileName);
+            for (int i = 0; i < bills.size(); i++){
+                out.println(bills.get(i));
+            }
+        }
+        catch(Exception e){
+            String errorMsg = e.getMessage();
+            System.out.println(errorMsg);
+        }
+        finally{
+            if(out != null){
+                out.close();
+            }
+        }
+        return fileName;
+    }
+
+    public static void print(int[] reservations, ArrayList<Boolean> child, double[] discount, ArrayList<Double> bill){
+        System.out.println("Reservations");
+        for (int i = 0; i < child.size(); i++){
+            System.out.println("Table " + (i+1));
+            System.out.print(reservations[i] + ", ");
+            System.out.print(child.get(i) + ", ");
+            System.out.print(discount[i] * 100 + "%, ");
+            System.out.printf("Total Bill: $%.2f", bill.get(i));
+            System.out.println();
+        }
+    }
+
+    public static int maxTable(ArrayList<Double> bills){
+        int maxTable = 1;
+        double highest = bills.get(0);
+
+        for (int i = 0; i < bills.size(); i++){
+            if(bills.get(i) > highest){
+                highest = bills.get(i);
+                maxTable = (i+1);
+            }
+        }
+        return maxTable;
+    }
+
+    public static ArrayList<Double> readFile(String fileName){
+        Scanner scnr = null;
+        ArrayList<Double> prices = new ArrayList<>();
+
+        File fileToRead = new File(fileName);
+        try {
+            scnr = new Scanner(fileToRead);
+            while (scnr.hasNextDouble()) {
+                prices.add(scnr.nextDouble());
+            }
+        }
+        catch(FileNotFoundException fne){
+            System.out.println(fne.getMessage());
+        }
+        finally{
+            if(scnr != null){
+                scnr.close();
+            }
+        }
+        return prices;
+    }
+}
